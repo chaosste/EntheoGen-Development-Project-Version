@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useId } from 'react';
 import {
   AlertTriangle,
   ArrowDown,
@@ -18,7 +18,6 @@ import {
   Menu,
   X,
   Sparkles,
-  Search,
   Star,
   Trash2,
   ChevronDown,
@@ -35,17 +34,32 @@ import logoJaguar from './assets/logo-jaguar.png';
 // --- Components ---
 
 interface SearchableSelectProps {
+  labelId: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
   disabled?: boolean;
   placeholder?: string;
 }
 
-function SearchableSelect({ label, value, onChange, disabled, placeholder }: SearchableSelectProps) {
-  const [isOpen, setIsOpen] = useState(false);
+function SearchableSelect({
+  labelId,
+  label,
+  value,
+  onChange,
+  isOpen,
+  onOpenChange,
+  disabled,
+  placeholder
+}: SearchableSelectProps) {
   const [search, setSearch] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const comboboxId = useId();
+  const listboxId = `${comboboxId}-listbox`;
 
   const filteredDrugs = useMemo(() => {
     return DRUGS.filter(drug =>
@@ -59,29 +73,111 @@ function SearchableSelect({ label, value, onChange, disabled, placeholder }: Sea
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        onOpenChange(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [onOpenChange]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setActiveIndex(0);
+      requestAnimationFrame(() => inputRef.current?.focus());
+      return;
+    }
+    setSearch('');
+  }, [isOpen]);
+
+  const inputValue = isOpen ? search : selectedDrug?.name ?? '';
+  const activeDrug = filteredDrugs[activeIndex];
+  const activeOptionId = activeDrug ? `${comboboxId}-option-${activeDrug.id}` : undefined;
+
+  const openDropdown = () => {
+    if (disabled) return;
+    setSearch('');
+    setActiveIndex(0);
+    onOpenChange(true);
+  };
+
+  const selectDrug = (drugId: string) => {
+    onChange(drugId);
+    onOpenChange(false);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (disabled) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!isOpen) {
+        openDropdown();
+        return;
+      }
+      setActiveIndex((current) => Math.min(current + 1, Math.max(filteredDrugs.length - 1, 0)));
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!isOpen) {
+        openDropdown();
+        return;
+      }
+      setActiveIndex((current) => Math.max(current - 1, 0));
+    }
+
+    if (event.key === 'Enter') {
+      if (!isOpen) {
+        event.preventDefault();
+        openDropdown();
+        return;
+      }
+      if (activeDrug) {
+        event.preventDefault();
+        selectDrug(activeDrug.id);
+      }
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onOpenChange(false);
+    }
+  };
 
   return (
     <div className="space-y-2 relative" ref={containerRef}>
-      <label className="text-xs font-semibold uppercase tracking-wider text-black/50 ml-1">
+      <label id={labelId} className="text-xs font-semibold uppercase tracking-wider text-black/50 ml-1">
         {label}
       </label>
-      <button
-        type="button"
+      <div className="w-full glass-panel rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 flex items-center gap-3 focus-within:ring-1 focus-within:ring-white/20 transition-all disabled:opacity-50">
+        <input
+          ref={inputRef}
+          id={comboboxId}
+          type="text"
+          role="combobox"
+          aria-labelledby={labelId}
+          aria-controls={listboxId}
+          aria-expanded={isOpen}
+          aria-activedescendant={isOpen ? activeOptionId : undefined}
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          autoComplete="off"
         disabled={disabled}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        className="w-full glass-panel rounded-2xl px-4 sm:px-5 py-3.5 sm:py-4 text-left flex justify-between items-center gap-3 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all disabled:opacity-50"
-      >
-        <span className={`block flex-1 min-w-0 truncate ${selectedDrug ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-muted)] italic'}`}>
-          {selectedDrug ? selectedDrug.name : placeholder}
-        </span>
+          value={inputValue}
+          onFocus={() => {
+            if (!isOpen) openDropdown();
+          }}
+          onChange={(event) => {
+            if (!isOpen) onOpenChange(true);
+            setSearch(event.target.value);
+            setActiveIndex(0);
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          className={`w-full min-w-0 bg-transparent border-none outline-none ${selectedDrug && !isOpen ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-muted)] italic'}`}
+        />
         <ChevronDown className={`w-5 h-5 text-[var(--text-muted)] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+      </div>
 
       <AnimatePresence>
         {isOpen && (
@@ -92,28 +188,23 @@ function SearchableSelect({ label, value, onChange, disabled, placeholder }: Sea
             transition={{ duration: 0.2 }}
             className="absolute z-40 top-full left-0 right-0 mt-2 glass-panel rounded-2xl overflow-hidden"
           >
-            <div className="p-3 border-b border-white/5 flex items-center gap-3 bg-black/20 backdrop-blur-md">
-              <Search className="w-4 h-4 text-[var(--text-muted)]" />
-              <input
-                autoFocus
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-transparent border-none outline-none text-sm py-1 placeholder-[var(--text-muted)] text-[var(--text-primary)] font-sans"
-              />
-            </div>
-            <div className="max-h-60 overflow-y-auto custom-scrollbar bg-black/40">
+            <div
+              id={listboxId}
+              role="listbox"
+              aria-label={`${label} options`}
+              className="max-h-60 overflow-y-auto custom-scrollbar bg-black/40"
+            >
               {filteredDrugs.length > 0 ? (
-                filteredDrugs.map((drug) => (
+                filteredDrugs.map((drug, index) => (
                   <button
+                    id={`${comboboxId}-option-${drug.id}`}
                     key={drug.id}
-                    onClick={() => {
-                      onChange(drug.id);
-                      setIsOpen(false);
-                      setSearch('');
-                    }}
-                    className={`w-full text-left px-5 py-3 hover:bg-white/5 transition-colors flex flex-col gap-1 border-b border-white/5 last:border-0 ${value === drug.id ? 'bg-white/10' : ''}`}
+                    type="button"
+                    role="option"
+                    aria-selected={value === drug.id}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    onClick={() => selectDrug(drug.id)}
+                    className={`w-full text-left px-5 py-3 hover:bg-white/5 transition-colors flex flex-col gap-1 border-b border-white/5 last:border-0 ${value === drug.id ? 'bg-white/10' : ''} ${activeIndex === index ? 'bg-white/5' : ''}`}
                   >
                     <span className="font-medium text-sm text-[var(--text-primary)]">{drug.name}</span>
                     <span className="text-[10px] uppercase tracking-[0.15em] text-[var(--text-muted)] font-semibold">{drug.class}</span>
@@ -144,6 +235,7 @@ export default function App() {
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openSelect, setOpenSelect] = useState<'drug1' | 'drug2' | null>(null);
   const [favorites, setFavorites] = useState<{ id: string, d1: string, d2: string, code: string }[]>([]);
   const favoritesStorageKey = 'entheogen_favorites';
 
@@ -271,6 +363,7 @@ export default function App() {
   const handleReset = () => {
     setDrug1('');
     setDrug2('');
+    setOpenSelect(null);
     setShowResult(false);
     setExplanation('');
     setSummary('');
@@ -348,7 +441,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 sm:mb-6 tracking-tighter leading-[0.95] sm:leading-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white/90 to-white/40"
           >
-            EntheoGen<br />Ceremonial Safety Guide
+            EntheoGen<br />Plant Medicine<br />Interaction Guide
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -363,16 +456,26 @@ export default function App() {
         <section className="space-y-6 sm:space-y-8">
           <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
             <SearchableSelect
+              labelId="drug1-label"
               label="Choose first substance/class"
               value={drug1}
               onChange={setDrug1}
+              isOpen={openSelect === 'drug1'}
+              onOpenChange={(isOpen) =>
+                setOpenSelect((current) => (isOpen ? 'drug1' : current === 'drug1' ? null : current))
+              }
               disabled={showResult}
               placeholder="Select ceremonial substance or medication class..."
             />
             <SearchableSelect
+              labelId="drug2-label"
               label="Choose second substance/class"
               value={drug2}
               onChange={setDrug2}
+              isOpen={openSelect === 'drug2'}
+              onOpenChange={(isOpen) =>
+                setOpenSelect((current) => (isOpen ? 'drug2' : current === 'drug2' ? null : current))
+              }
               disabled={showResult}
               placeholder="Select ceremonial substance or medication class..."
             />
