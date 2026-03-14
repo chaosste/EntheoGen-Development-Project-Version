@@ -37,9 +37,11 @@ EntheoGen is trained on peer-reviewed academic literature.
 
 However, study is light especially in areas such as interactions between less commonly used entheogenic substances.
 
-# Beta test EntheoGen and leave your comments in our [<Discussions>](https://github.com/chaosste/EntheoGen/discussions/1)!
+# Beta test EntheoGen 
 
-It attempts to offer explicit confidence ratings and transparent source traceability, (although it can currently refer directly to source note pdfs we compiled, and requires tweaking). 
+Please leave feedback in [Discussions](https://github.com/chaosste/EntheoGen/discussions/1)!
+
+EntheoGen attempts to offer explicit confidence ratings and transparent source traceability, (although it can currently refer directly to source note pdfs we compiled, and requires tweaking). 
 
 If pharmacological evidence is missing, the engine should return `Unknown` rather than generating speculative predictions. 
 
