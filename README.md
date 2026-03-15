@@ -2,7 +2,7 @@
 
 # 🌿 EntheoGen Mixed Modality Guide
 
-**Ceremonial Psychedelic Interaction Guidance**
+**Plant Medicine Interaction Guidance**
 
 *Evidence-grounded risk engine and strict safety posture for pre-reflective exploration*
 
