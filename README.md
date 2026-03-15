@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🌿 EntheoGen Mixed Modality Guide
+# 🌿 EntheoGen Plant Medicine Interaction Guide
 
-**Plant Medicine Interaction Guidance**
+**Mixed Modality Comparison Dataset**
 
 *Evidence-grounded risk engine and strict safety posture for pre-reflective exploration*
 
