@@ -9,7 +9,7 @@
 **Live demo:** 
 [www.entheogen.newpsychonaut.com](https://www.entheogen.newpsychonaut.com/) 
 · 
-[entheogen.azurewebsites.net](https://entheogen.azurewebsites.net)
+[www.entheogen.azurewebsites.net](https://entheogen.azurewebsites.net)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
@@ -18,6 +18,12 @@
 </div>
 
 ---
+
+## Important!
+
+EntheoGen is not intended to provide clinical medical advice. 
+
+For expert drug harm reduction guidance, consult your doctor.
 
 ## What is EntheoGen?
 
@@ -35,9 +41,9 @@ Unlike purely generative AI tools, the interaction output here is intended to st
 
 EntheoGen is trained on peer-reviewed academic literature. 
 
-However, study is light especially in areas such as interactions between less commonly used entheogenic substances.
+However, study is light in areas such as interactions between less commonly-used entheogenic substances.
 
-# Beta test EntheoGen 
+# Help beta test EntheoGen 
 
 For now please leave feedback in [Discussions](https://github.com/chaosste/EntheoGen/discussions/1)
 
@@ -78,10 +84,6 @@ cd EntheoGen
 
 # Install dependencies
 npm install
-
-# Configure Gemini API key for explanatory text features
-cp .env.example .env.local
-# set GEMINI_API_KEY in .env.local
 
 # Run development server
 npm run dev
