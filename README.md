@@ -43,22 +43,19 @@ EntheoGen is trained on peer-reviewed academic literature.
 
 However, study is light in areas such as interactions between less commonly-used entheogenic substances.
 
-# Help beta test EntheoGen 
+## Please help 'beta test' EntheoGen 
 
 For now please leave feedback in [Discussions](https://github.com/chaosste/EntheoGen/discussions/1)
-
-EntheoGen attempts to offer explicit confidence ratings and transparent source traceability, (although it can currently refer directly to source note pdfs we compiled, and requires tweaking). 
-
-If pharmacological evidence is missing, the engine should return `Unknown` rather than generating speculative predictions. 
-
-# Recent Updates
 
 EntheoGen sometimes now defers to expertise if academic literature is unavailable.
 
 Extended explanations provide database detail for beta test analysis.
 
-## Why it is different
+If evidence is missing, the engine should return `Unknown` rather than generating speculative predictions. 
 
+## Why EntheoGen is different
+
+- ⚙️ **Covers ceremonial and intentional use** — existing sources focus on widely-used recreational substances
 - ⚙️ **Evidence-Grounded Risk Engine** — deterministic output based on curated pharmacological rules
 - 🛡️ **Strict Safety Posture** — missing-data pairs explicitly resolve to `UNK` (Unknown) rather than guessing
 - 🔍 **Source Traceability** — readouts expose confidence and evidentiary source metadata
