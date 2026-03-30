@@ -1,3 +1,4 @@
+<div align="center">
 # 🌿 EntheoGen Plant Medicine Interaction Guide
 
 **Evidence-Grounded Interaction Engine + Alignment-Aware Comparison Dataset**
@@ -11,7 +12,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-<div align="center">
   <img src="docs/assets/entheogen-asset-beta-0.1.gif" width="600" alt="EntheoGen release demo" />
 </div>
 
