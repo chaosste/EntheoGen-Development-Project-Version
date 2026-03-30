@@ -116,8 +116,6 @@ The hf_dataset/ bundle can be loaded directly using:
 datasets.load_dataset(...)
 ```
 
----
-
 # Evaluation harness
 
 EntheoGen now includes a local benchmarking system for testing model interaction reasoning.
@@ -202,6 +200,8 @@ The harness includes:
 	•	prediction confidence scoring
 
 These features enable reproducible comparison across model providers.
+
+---
 
 # We need YOUR entheogenic knowledge
 
