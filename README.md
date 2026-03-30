@@ -23,8 +23,6 @@ EntheoGen does **not** provide clinical medical advice.
 
 For expert harm-reduction guidance, consult a qualified medical professional.
 
----
-
 # What is EntheoGen?
 
 EntheoGen is a substance interaction guidance app focussed on intentional use of psychedelics. 
