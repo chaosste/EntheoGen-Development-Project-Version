@@ -25,7 +25,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
-import { DRUGS, LEGEND, getInteractionEvidence } from './data/drugData';
+import {
+  DRUGS,
+  LEGEND,
+  classifyMechanismCategory,
+  resolveInteraction
+} from './data/drugData';
+import type { MechanismCategory, RuleOrigin } from './data/drugData';
 import { getInteractionExplanation, getDrugSummary } from './services/geminiService';
 import logoVine from './assets/logo-vine.png';
 import logoLeaf from './assets/logo-leaf.png';
@@ -98,6 +104,17 @@ function SearchableSelect({
     setSearch('');
     setActiveIndex(0);
     onOpenChange(true);
+  };
+
+  const toggleDropdown = () => {
+    if (disabled) return;
+
+    if (isOpen) {
+      onOpenChange(false);
+      return;
+    }
+
+    openDropdown();
   };
 
   const selectDrug = (drugId: string) => {
@@ -176,7 +193,17 @@ function SearchableSelect({
           placeholder={placeholder}
           className={`w-full min-w-0 bg-transparent border-none outline-none text-sm sm:text-base lg:text-[0.95rem] leading-tight placeholder:text-[var(--text-muted)] placeholder:italic placeholder:text-sm sm:placeholder:text-base lg:placeholder:text-[0.95rem] ${selectedDrug && !isOpen ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-muted)] italic'}`}
         />
-        <ChevronDown className={`w-5 h-5 text-[var(--text-muted)] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <button
+          type="button"
+          onClick={toggleDropdown}
+          disabled={disabled}
+          aria-label={`${isOpen ? 'Close' : 'Open'} ${label}`}
+          aria-expanded={isOpen}
+          aria-controls={listboxId}
+          className="shrink-0 rounded-full p-1 text-[var(--text-muted)] transition-colors hover:text-[var(--text-primary)] disabled:cursor-not-allowed"
+        >
+          <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
       </div>
 
       <AnimatePresence>
@@ -225,6 +252,38 @@ function SearchableSelect({
 
 // --- Main App ---
 
+const ORIGIN_LABELS: Record<RuleOrigin, string> = {
+  self: 'Same selection',
+  explicit: 'Curated pair rule',
+  fallback: 'Fallback rule',
+  unknown: 'Source gap'
+};
+
+const MECHANISM_FAMILY_LABELS: Partial<Record<MechanismCategory, string>> = {
+  serotonergic: 'Serotonergic',
+  maoi: 'MAOI-mediated',
+  qt_prolongation: 'QT / rhythm load',
+  sympathomimetic: 'Sympathomimetic',
+  cns_depressant: 'CNS depressant',
+  anticholinergic: 'Anticholinergic',
+  dopaminergic: 'Dopaminergic',
+  glutamatergic: 'Glutamatergic',
+  gabaergic: 'GABAergic',
+  stimulant_stack: 'Stimulant stack',
+  psychedelic_potentiation: 'Psychedelic potentiation',
+  cardiovascular_load: 'Cardiovascular load'
+};
+
+const getMechanismFamilyLabel = (
+  mechanismCategory?: MechanismCategory | null
+) => {
+  if (!mechanismCategory || mechanismCategory === 'unknown') {
+    return null;
+  }
+
+  return MECHANISM_FAMILY_LABELS[mechanismCategory] ?? null;
+};
+
 export default function App() {
   const [drug1, setDrug1] = useState<string>('');
   const [drug2, setDrug2] = useState<string>('');
@@ -258,10 +317,23 @@ export default function App() {
     localStorage.setItem(favoritesStorageKey, JSON.stringify(favorites));
   }, [favorites]);
 
-  const interactionEvidence = useMemo(() => {
+  const resolvedInteraction = useMemo(() => {
     if (!drug1 || !drug2) return null;
-    return getInteractionEvidence(drug1, drug2);
+    return resolveInteraction(drug1, drug2);
   }, [drug1, drug2]);
+
+  const interactionEvidence = resolvedInteraction?.evidence ?? null;
+  const interactionOrigin = resolvedInteraction?.origin ?? null;
+
+  const mechanismCategory = useMemo(() => {
+    if (!interactionEvidence) return null;
+    return classifyMechanismCategory(interactionEvidence.mechanism);
+  }, [interactionEvidence]);
+
+  const mechanismFamilyLabel = useMemo(
+    () => getMechanismFamilyLabel(mechanismCategory),
+    [mechanismCategory]
+  );
 
   const interactionCode = interactionEvidence?.code || null;
 
@@ -303,9 +375,14 @@ export default function App() {
     setExplanation('');
     setSummary('');
 
-    const localEvidence = selectedDrug1 && selectedDrug2
-      ? getInteractionEvidence(selectedDrug1, selectedDrug2)
+    const localResolvedInteraction = selectedDrug1 && selectedDrug2
+      ? resolveInteraction(selectedDrug1, selectedDrug2)
       : null;
+    const localEvidence = localResolvedInteraction?.evidence ?? null;
+    const localOrigin = localResolvedInteraction?.origin;
+    const localMechanismCategory = localEvidence
+      ? classifyMechanismCategory(localEvidence.mechanism)
+      : undefined;
     const localInteractionCode = localEvidence?.code || null;
     const localInteraction = localInteractionCode ? LEGEND[localInteractionCode] : null;
 
@@ -326,6 +403,8 @@ export default function App() {
             confidence: localEvidence.confidence,
             riskScale: localInteraction.riskScale,
             mechanism: localEvidence.mechanism,
+            mechanismCategory: localMechanismCategory,
+            origin: localOrigin,
             practicalGuidance: localEvidence.practicalGuidance,
             timing: localEvidence.timing,
             evidenceGaps: localEvidence.evidenceGaps,
@@ -344,6 +423,8 @@ export default function App() {
         confidence: localEvidence?.confidence,
         riskScale: localInteraction?.riskScale,
         mechanism: localEvidence?.mechanism,
+        mechanismCategory: localMechanismCategory,
+        origin: localOrigin,
         practicalGuidance: localEvidence?.practicalGuidance,
         timing: localEvidence?.timing,
         evidenceGaps: localEvidence?.evidenceGaps,
@@ -579,6 +660,25 @@ export default function App() {
                         <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }} className="w-1.5 h-1.5 bg-indigo-400 rounded-full" />
                         <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5, delay: 0.6 }} className="w-1.5 h-1.5 bg-indigo-400 rounded-full" />
                       </div>
+                    )}
+                  </div>
+
+                  <div className="relative z-10 mb-6 flex flex-wrap gap-2">
+                    {interactionEvidence?.confidence && (
+                      <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                        <ShieldAlert className="w-3.5 h-3.5 text-indigo-300" />
+                        Confidence: {interactionEvidence.confidence.toUpperCase()}
+                      </span>
+                    )}
+                    {interactionOrigin && (
+                      <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                        Dataset basis: {ORIGIN_LABELS[interactionOrigin]}
+                      </span>
+                    )}
+                    {mechanismFamilyLabel && (
+                      <span className="inline-flex items-center rounded-full border border-indigo-400/20 bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-200">
+                        Mechanism family: {mechanismFamilyLabel}
+                      </span>
                     )}
                   </div>
 

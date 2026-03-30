@@ -27,6 +27,95 @@ export interface InteractionEvidence {
   fieldNotes?: string;
 }
 
+export type RuleOrigin = 'self' | 'explicit' | 'fallback' | 'unknown';
+
+export type MechanismCategory =
+  | 'serotonergic'
+  | 'maoi'
+  | 'qt_prolongation'
+  | 'sympathomimetic'
+  | 'cns_depressant'
+  | 'anticholinergic'
+  | 'dopaminergic'
+  | 'glutamatergic'
+  | 'gabaergic'
+  | 'stimulant_stack'
+  | 'psychedelic_potentiation'
+  | 'cardiovascular_load'
+  | 'unknown';
+
+export interface ResolvedInteraction {
+  evidence: InteractionEvidence;
+  origin: RuleOrigin;
+  pairKey: string;
+}
+
+export function classifyMechanismCategory(
+  mechanism?: string
+): MechanismCategory {
+  if (!mechanism) {
+    return 'unknown';
+  }
+
+  const normalizedMechanism = mechanism.toLowerCase();
+
+  if (normalizedMechanism.includes('serotonin')) {
+    return 'serotonergic';
+  }
+
+  if (normalizedMechanism.includes('maoi')) {
+    return 'maoi';
+  }
+
+  if (normalizedMechanism.includes('qt')) {
+    return 'qt_prolongation';
+  }
+
+  if (normalizedMechanism.includes('sympathomimetic')) {
+    return 'sympathomimetic';
+  }
+
+  if (normalizedMechanism.includes('cns depressant')) {
+    return 'cns_depressant';
+  }
+
+  if (normalizedMechanism.includes('anticholinergic')) {
+    return 'anticholinergic';
+  }
+
+  if (normalizedMechanism.includes('dopamine')) {
+    return 'dopaminergic';
+  }
+
+  if (normalizedMechanism.includes('glutamate')) {
+    return 'glutamatergic';
+  }
+
+  if (normalizedMechanism.includes('gaba')) {
+    return 'gabaergic';
+  }
+
+  if (normalizedMechanism.includes('stimulant')) {
+    return 'stimulant_stack';
+  }
+
+  if (
+    normalizedMechanism.includes('potentiation') &&
+    normalizedMechanism.includes('psychedelic')
+  ) {
+    return 'psychedelic_potentiation';
+  }
+
+  if (
+    normalizedMechanism.includes('cardio') ||
+    normalizedMechanism.includes('hypertension')
+  ) {
+    return 'cardiovascular_load';
+  }
+
+  return 'unknown';
+}
+
 export const DRUGS: Drug[] = [
   {
     id: 'ayahuasca',
@@ -698,21 +787,51 @@ const getFallbackInteractionEvidence = (drug1: string, drug2: string): Interacti
 };
 
 export const getInteractionEvidence = (drug1: string, drug2: string): InteractionEvidence => {
+  return resolveInteraction(drug1, drug2).evidence;
+};
+
+export const resolveInteraction = (drug1: string, drug2: string): ResolvedInteraction => {
+  const canonicalPairKey = pairKey(drug1, drug2);
+
   if (drug1 === drug2) {
     return {
-      code: 'SELF',
-      summary: 'Same entity selected; this is not an interaction pair.',
-      confidence: 'n/a',
-      sources: 'n/a'
+      pairKey: canonicalPairKey,
+      origin: 'self',
+      evidence: {
+        code: 'SELF',
+        summary: 'Same entity selected; this is not an interaction pair.',
+        confidence: 'n/a',
+        sources: 'n/a'
+      }
     };
   }
-  return (
-    INTERACTION_RULES[pairKey(drug1, drug2)] ||
-    getFallbackInteractionEvidence(drug1, drug2) || {
+
+  const explicitEvidence = INTERACTION_RULES[canonicalPairKey];
+  if (explicitEvidence) {
+    return {
+      pairKey: canonicalPairKey,
+      origin: 'explicit',
+      evidence: explicitEvidence
+    };
+  }
+
+  const fallbackEvidence = getFallbackInteractionEvidence(drug1, drug2);
+  if (fallbackEvidence) {
+    return {
+      pairKey: canonicalPairKey,
+      origin: 'fallback',
+      evidence: fallbackEvidence
+    };
+  }
+
+  return {
+    pairKey: canonicalPairKey,
+    origin: 'unknown',
+    evidence: {
       code: 'UNK',
       summary: 'No explicit interaction classification is loaded for this pair in the current curated dataset.',
       confidence: 'low',
       sources: 'source-gap'
     }
-  );
+  };
 };
