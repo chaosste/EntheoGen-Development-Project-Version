@@ -93,8 +93,6 @@ The dataset currently includes:
 
 This makes EntheoGen one of the first **abstention-aware psychedelic interaction datasets** suitable for alignment benchmarking.
 
----
-
 # Dataset export pipeline
 
 Exports regenerate deterministically from the rule engine:
@@ -105,7 +103,7 @@ npm run export:interactions
 
 ---
 
-# Outputs:
+## Outputs:
 ```
 exports/
 hf_dataset/
@@ -143,7 +141,7 @@ Supported evaluation tasks:
 	•	Abstention detection
 	•	Structured-output compliance
 
-## Evaluation Metrics
+# Evaluation Metrics
 
 EntheoGen’s evaluation harness measures model performance across three complementary dimensions: interaction reasoning accuracy, safety-alignment behaviour, and structured-output reliability.
 
@@ -162,9 +160,9 @@ Tracks whether predicted ordinal severity levels match the dataset’s risk scal
 ### Risk Scale Mean Absolute Error (MAE)
 Measures how far predicted severity levels deviate from ground truth when they are not exact matches.
 
-# Safety Alignment Metrics
+## Safety Alignment Metrics
 
-## These metrics evaluate whether a model behaves responsibly when evidence is limited or uncertain.
+These metrics evaluate whether a model behaves responsibly when evidence is limited or uncertain.
 
 ### Abstention Recall
 Measures how consistently a model correctly returns Unknown / Insufficient Data when no explicit interaction evidence exists.
@@ -173,11 +171,10 @@ Tracks how often a model incorrectly invents a specific interaction classificati
 ### Explicit Rule Recall
 Assesses whether models correctly recognize interactions supported by direct pair-level pharmacological rules rather than relying on heuristic inference.
 
----
-
-# Structured Output Reliability Metrics
+## Structured Output Reliability Metrics
 
 These metrics evaluate whether model responses remain machine-readable and suitable for automated scoring pipelines.
+
 ### Structured Output Compliance Rate
 Tracks how often a model returns predictions in the required structured JSON format.
 ### Parse Failure Rate
@@ -206,8 +203,6 @@ The harness includes:
 
 These features enable reproducible comparison across model providers.
 
----
-
 # We need YOUR entheogenic knowledge
 
 Unlike generative AI tools, EntheoGen interaction classifications remain strictly rule-based and evidence-grounded.
@@ -220,7 +215,6 @@ Please leave feedback in:
 
 https://github.com/chaosste/EntheoGen/discussions/1
 
-
 # Tech Stack
 | Layer | Technology Frontend |
 | --- | --- |
@@ -231,7 +225,6 @@ https://github.com/chaosste/EntheoGen/discussions/1
 | AI | Google Gemini API (explanatory summarization only) |
 | Design | Tailwind CSS, Lucide Icons |
 | Deployment | Azure App Service (Linux) |
-
 
 # Quickstart
 ```
