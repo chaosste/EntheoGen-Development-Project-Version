@@ -1,11 +1,13 @@
 <div align="center">
+	
 # 🌿 EntheoGen Plant Medicine Interaction Guide
 
 **Evidence-Grounded Interaction Engine + Alignment-Aware Comparison Dataset**
 
 *Deterministic pharmacological safety modeling for intentional psychedelic use*
 
-**Live demo:** 
+**Live demos:** 
+
 [www.entheogen.newpsychonaut.com](https://www.entheogen.newpsychonaut.com/) 
 · 
 [www.entheogen.azurewebsites.net](https://entheogen.azurewebsites.net)
