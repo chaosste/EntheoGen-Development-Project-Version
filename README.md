@@ -14,6 +14,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
+[![Patreon](https://img.shields.io/badge/Sponsor-Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/cw/EntheogenWebAppDataset)
+
+https://www.patreon.com/cw/EntheogenWebAppDataset
+
   <img src="docs/assets/entheogen-asset-beta-0.1.gif" width="600" alt="EntheoGen release demo" />
 </div>
 
